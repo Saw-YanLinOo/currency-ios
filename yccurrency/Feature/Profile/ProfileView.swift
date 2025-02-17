@@ -11,7 +11,7 @@ struct ProfileView: View {
     var body: some View {
         VStack {
             ProfileItemView(title: "Name", value: "YanYan Chan")
-            ProfileItemView(title: "Email", value: "yc.gmail.com")
+            ProfileItemView(title: "Email", value: "yc@gmail.com")
 
             Spacer()
 

@@ -7,18 +7,17 @@
 
 import SwiftUI
 
-struct ExchangeRateView: View {
+enum ActiveField {
+    case mmkAmount, otherAmount, none
+}
 
-    @State private var fromAmount = "4580"
-    @State private var toAmount = "1"
-    @State private var selectedFromCurrencyCode = "MMK"
-    @State private var selectedToCurrency = "USD"
-    @State private var selectedFromCurrencyFlag = "🇲🇲"
-    @State private var selectedToCurrencyFlag = "🇺🇸"
+struct ExchangeRateView: View {
 
     @State private var currentDate = Date()
 
     @StateObject private var viewModel: ExchangeRateViewModel = .init()
+
+    @FocusState private var focusedField: ActiveField?
 
     var body: some View {
         GeometryReader { geometry in
@@ -41,21 +40,33 @@ struct ExchangeRateView: View {
                             HStack {
 
                                 Button("Buy") {
-                                    // do something
+                                    viewModel.onChangeBuyOrSell(.buy)
                                 }
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 8)
-                                .foregroundColor(.gray)
-                                .background(.white)
+                                .foregroundColor(
+                                    viewModel.buyOrSell == .buy
+                                        ? .white : .gray
+                                )
+                                .background(
+                                    viewModel.buyOrSell == .buy ? .blue : .white
+                                )
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
 
                                 Button("Sell") {
-                                    // do something
+                                    viewModel.onChangeBuyOrSell(.sell)
                                 }
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 8)
-                                .foregroundColor(.white)
-                                .background(.blue)
+                                .foregroundColor(
+                                    viewModel.buyOrSell == .sell
+                                        ? .white : .gray
+
+                                )
+                                .background(
+                                    viewModel.buyOrSell == .sell
+                                        ? .blue : .white
+                                )
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
 
                             }
@@ -66,22 +77,38 @@ struct ExchangeRateView: View {
                         .padding(.horizontal)
                     }
 
-                    CurrencyInputRow(
-                        amount: $fromAmount,
-                        currency: $selectedFromCurrencyCode,
-                        flag: $selectedFromCurrencyFlag)
+                    CurrencyInputRowForMMK(
+                        amount: $viewModel.mmkAmount,
+                        currency: $viewModel.mmkCurrency,
+                        onAmountChange: { newValue in
+                            viewModel.mmkAmountChange()
+                        },
+                        focusedField: $focusedField,
+                        field: .mmkAmount
+                    )
 
                     Text("=")
                         .font(.system(size: 36, weight: .medium))
                         .foregroundStyle(.white)
                         .padding(.horizontal)
 
-                    CurrencyInputRow(
-                        amount: $toAmount, currency: $selectedToCurrency,
-                        flag: $selectedToCurrencyFlag)
+                    CurrencyInputRowForOther(
+                        amount: $viewModel.otherAmount,
+                        currency: viewModel.otherCurrency,
+                        currencies: viewModel.currencies,
+                        onSelection: { currency in
+                            viewModel.changeOtherCurrency(currency)
+                        },
+                        onAmountChange: { newValue in
+                            viewModel.otherAmountChange()
+                        },
+                        focusedField: $focusedField,
+                        field: .otherAmount
+                    )
+
                     ExchangeRateInfoView(
                         info:
-                            "\(selectedToCurrencyFlag) \(toAmount) \(selectedToCurrency)   =   \(selectedFromCurrencyFlag) \(fromAmount) \(selectedFromCurrencyCode)",
+                            "\(viewModel.otherCurrency?.flag ?? " ") \(viewModel.otherAmount) \(viewModel.otherCurrency?.code ?? " ")   =   \(viewModel.mmkCurrency.flag) \(viewModel.mmkAmount) \(viewModel.mmkCurrency.code)",
                         date:
                             "As of \(DateFormatter.longFormat.string(from: currentDate))"
                     )
@@ -92,11 +119,6 @@ struct ExchangeRateView: View {
             .scrollIndicators(.hidden)
             .background(Color.gray.opacity(0.1))
             .edgesIgnoringSafeArea(.top)
-        }
-        .onAppear {
-            Task {
-                await viewModel.fetchCurrency()
-            }
         }
 
     }
@@ -125,11 +147,13 @@ struct ExchangeRateInfoView: View {
     }
 }
 
-struct CurrencyInputRow: View {
+struct CurrencyInputRowForMMK: View {
 
     @Binding var amount: String
-    @Binding var currency: String
-    @Binding var flag: String
+    @Binding var currency: CurrencyModel
+    var onAmountChange: (String) -> Void
+    @FocusState.Binding var focusedField: ActiveField?
+    let field: ActiveField
 
     var body: some View {
         HStack {
@@ -141,20 +165,97 @@ struct CurrencyInputRow: View {
                 .padding()
                 .background(Color.white)
                 .cornerRadius(8)
+                //                .disabled(true)
+                .focused($focusedField, equals: field)
+                .onChange(of: amount) { _, newValue in
+                    if focusedField == field {
+                        onAmountChange(newValue)
+                    }
+                }
 
-            Button("\(flag)  \(currency)", action: {})
-                .foregroundStyle(.black)
-                .fontWeight(.bold)
-                .font(.system(size: 24, weight: .medium))
-                .padding()
-                .background(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+            Button(action: {}) {
+                HStack {
+                    Text("\(currency.flag)  \(currency.code)")
+                        .foregroundStyle(.black)
+                        .fontWeight(.bold)
+                        .font(.system(size: 20, weight: .medium))
+                }
+            }
+            .frame(width: 90)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 20)
+            .background(.white)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
 
         }
         .padding(.horizontal)
     }
 }
 
+struct CurrencyInputRowForOther: View {
+
+    @Binding var amount: String
+    var currency: CurrencyModel?
+    var currencies: [CurrencyModel]
+    var onSelection: (CurrencyModel) -> Void
+    var onAmountChange: (String) -> Void
+    @FocusState.Binding var focusedField: ActiveField?
+    let field: ActiveField
+
+    var body: some View {
+        HStack {
+
+            TextField("Amount", text: $amount)
+                .keyboardType(.decimalPad)
+                .font(.system(size: 24, weight: .medium))
+                .foregroundColor(.black)
+                .padding()
+                .background(Color.white)
+                .cornerRadius(8)
+                .focused($focusedField, equals: field)
+                .onChange(of: amount) { _, newValue in
+                    if focusedField == field {
+                        onAmountChange(newValue)
+                    }
+                }
+
+            Menu {
+                ForEach(currencies, id: \.id) { type in
+                    Button(action: {
+                        onSelection(type)
+                    }) {
+                        Text("\(type.flag)  \(type.code)")
+                            .foregroundStyle(.black)
+                            .fontWeight(.bold)
+                            .font(.system(size: 24, weight: .medium))
+
+                    }
+                }
+            } label: {
+                HStack {
+                    Text("\(currency?.flag ?? "")  \(currency?.code ?? "")")
+                        .foregroundStyle(.black)
+                        .fontWeight(.bold)
+                        .font(.system(size: 18, weight: .medium))
+
+                    Image(systemName: "chevron.down")
+                        .resizable()
+                        .frame(width: 16, height: 10)
+                        .foregroundStyle(.black.opacity(0.7))
+
+                }
+
+            }
+            .frame(width: 100)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 20)
+            .background(.white)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+
+        }
+        .padding(.horizontal)
+    }
+}
 struct LatestRateView: View {
 
     var currencies: [CurrencyModel]
@@ -165,12 +266,17 @@ struct LatestRateView: View {
                 .font(.largeTitle)
                 .fontWeight(.bold)
                 .padding(.horizontal)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             VStack(spacing: 12) {
                 ForEach(currencies) { currency in
-                    NavigationLink(destination: ExchangeRateDetailView(id: currency.id, code: currency.code, flag: currency.flag), label: {
-                        LatestRateCardView(currency: currency)
-                    })
+                    NavigationLink(
+                        destination: ExchangeRateDetailView(
+                            id: currency.id, code: currency.code,
+                            flag: currency.flag),
+                        label: {
+                            LatestRateCardView(currency: currency)
+                        })
                 }
             }
             .padding(.bottom, 24)
@@ -205,7 +311,7 @@ struct LatestRateCardView: View {
                     }
                     .padding(.bottom, 2)
 
-                    Text(String(format: "%.2f", currency.buyPrice))
+                    Text(currency.buyPrice.formattedWithSeparator())
                         .font(.system(size: 16, weight: .regular))
 
                 }
@@ -225,7 +331,7 @@ struct LatestRateCardView: View {
                     }
                     .padding(.bottom, 2)
 
-                    Text(String(format: "%.2f", currency.sellPrice))
+                    Text(currency.sellPrice.formattedWithSeparator())
                         .font(.system(size: 16, weight: .regular))
 
                 }

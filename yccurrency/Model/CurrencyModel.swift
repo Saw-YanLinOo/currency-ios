@@ -41,6 +41,7 @@ struct CurrencyModel: Identifiable, Codable {
     // Get flag emoji based on currency code
     var flag: String {
         switch code {
+        case "MMK": return "🇲🇲"
         case "USD": return "🇺🇸"
         case "EUR": return "🇪🇺"
         case "SGD": return "🇸🇬"

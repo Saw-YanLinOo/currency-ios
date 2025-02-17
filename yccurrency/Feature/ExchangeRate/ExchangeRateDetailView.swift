@@ -18,7 +18,7 @@ struct ExchangeRateDetailView: View {
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
-                ResentRateView(
+                RecentRateView(
                     recentCurrency: viewModel.recentCurrencyHistory, code: code)
 
                 HStack {
@@ -47,7 +47,7 @@ struct ExchangeRateDetailView: View {
         }
         .onAppear {
             Task {
-                await viewModel.fetchCurrencyHistory()
+                await viewModel.fetchCurrencyHistory(currencyCode: id)
             }
         }
 
@@ -55,7 +55,7 @@ struct ExchangeRateDetailView: View {
 
 }
 
-struct ResentRateView: View {
+struct RecentRateView: View {
 
     var recentCurrency: CurrencyHistoryModel?
     var code: String

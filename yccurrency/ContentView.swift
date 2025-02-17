@@ -19,28 +19,28 @@ struct ContentView: View {
                     ExchangeRateView().tabItem {
                         Label("Exchange Rate", systemImage: "arrow.up.circle")
                     }.tag(0)
-                    ExchangersView()
+                    ExchangerView()
                         .tabItem {
                             Image(systemName: "arrow.2.squarepath")
-                            Text("Exchange")
+                            Text("Exchanger")
                         }.tag(1)
-                    
-                    ProfilesView()
+
+                    ProfileView()
                         .tabItem {
                             Image(systemName: "person.circle")
                             Text("Profile")
                         }
                         .tag(2)
-//
-//                    ExchangerView().tabItem {
-//                        Label("Exchanger", systemImage: "suitcase.fill")
-//                    }.tag(1)
-//
-//                    ProfileView().tabItem {
-//                        Label(
-//                            "Profile",
-//                            systemImage: "person.badge.shield.checkmark")
-//                    }.tag(2)
+                    //
+                    //                    ExchangerView().tabItem {
+                    //                        Label("Exchanger", systemImage: "suitcase.fill")
+                    //                    }.tag(1)
+                    //
+                    //                    ProfileView().tabItem {
+                    //                        Label(
+                    //                            "Profile",
+                    //                            systemImage: "person.badge.shield.checkmark")
+                    //                    }.tag(2)
                 }
             )
             .onAppear {
@@ -54,7 +54,6 @@ struct ContentView: View {
     ContentView()
 }
 
-
 // Data model for an exchange provider
 struct Exchanger: Identifiable {
     let id = UUID()
@@ -66,9 +65,15 @@ struct Exchanger: Identifiable {
 
 // Sample data for exchangers
 let sampleExchangers: [Exchanger] = [
-    Exchanger(name: "Global Exchange", description: "Best rates worldwide", imageName: "globe", exchangeRate: 1.15),
-    Exchanger(name: "City Money Exchange", description: "Reliable and fast", imageName: "building.2", exchangeRate: 1.13),
-    Exchanger(name: "FastExchanger", description: "24/7 services", imageName: "clock.fill", exchangeRate: 1.18)
+    Exchanger(
+        name: "Global Exchange", description: "Best rates worldwide",
+        imageName: "globe", exchangeRate: 1.15),
+    Exchanger(
+        name: "City Money Exchange", description: "Reliable and fast",
+        imageName: "building.2", exchangeRate: 1.13),
+    Exchanger(
+        name: "FastExchanger", description: "24/7 services",
+        imageName: "clock.fill", exchangeRate: 1.18),
 ]
 
 // ExchangerView showing a list of provider profiles
@@ -76,16 +81,18 @@ struct ExchangersView: View {
     // List of exchangers (could be fetched from an API)
     var exchangers: [Exchanger] = sampleExchangers
     @State private var searchText: String = ""
-    
+
     // Filter exchangers based on the search text
     var filteredExchangers: [Exchanger] {
         if searchText.isEmpty {
             return exchangers
         } else {
-            return exchangers.filter { $0.name.lowercased().contains(searchText.lowercased()) }
+            return exchangers.filter {
+                $0.name.lowercased().contains(searchText.lowercased())
+            }
         }
     }
-    
+
     var body: some View {
         NavigationView {
             VStack {
@@ -96,7 +103,7 @@ struct ExchangersView: View {
                     .cornerRadius(8)
                     .padding(.horizontal)
                     .padding(.top, 10)
-                
+
                 // List of exchanger profiles
                 List(filteredExchangers) { exchanger in
                     HStack(spacing: 16) {
@@ -108,14 +115,16 @@ struct ExchangersView: View {
                             .padding(8)
                             .background(
                                 LinearGradient(
-                                    gradient: Gradient(colors: [Color.blue, Color.purple]),
+                                    gradient: Gradient(colors: [
+                                        Color.blue, Color.purple,
+                                    ]),
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
                             )
                             .clipShape(Circle())
                             .foregroundColor(.white)
-                        
+
                         // Exchanger details
                         VStack(alignment: .leading, spacing: 4) {
                             Text(exchanger.name)
@@ -123,13 +132,15 @@ struct ExchangersView: View {
                             Text(exchanger.description)
                                 .font(.subheadline)
                                 .foregroundColor(.gray)
-                            Text("Rate: \(exchanger.exchangeRate, specifier: "%.2f")")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                            Text(
+                                "Rate: \(exchanger.exchangeRate, specifier: "%.2f")"
+                            )
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                         }
-                        
+
                         Spacer()
-                        
+
                         // Contact button (add your own action)
                         Button(action: {
                             // Implement the contact action here
@@ -150,7 +161,9 @@ struct ExchangersView: View {
             .background(
                 // Gradient background for a modern Exchange Rate theme
                 LinearGradient(
-                    gradient: Gradient(colors: [Color.white, Color.blue.opacity(0.2)]),
+                    gradient: Gradient(colors: [
+                        Color.white, Color.blue.opacity(0.2),
+                    ]),
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -171,14 +184,14 @@ struct ProfilesView: View {
                     .frame(width: 100, height: 100)
                     .foregroundColor(.blue)
                     .padding(.top, 40)
-                
+
                 // Profile details
                 Text("John Doe")
                     .font(.title)
                     .fontWeight(.bold)
                 Text("john.doe@example.com")
                     .foregroundColor(.gray)
-                
+
                 // Edit Profile button
                 Button(action: {
                     // Add your edit profile action here
@@ -192,17 +205,21 @@ struct ProfilesView: View {
                         .cornerRadius(8)
                         .padding(.horizontal)
                 }
-                
+
                 Spacer()
             }
             .padding()
             .navigationTitle("Profile")
             .background(
                 // Subtle gradient background for a modern look
-                LinearGradient(gradient: Gradient(colors: [Color.white, Color.blue.opacity(0.2)]),
-                               startPoint: .top,
-                               endPoint: .bottom)
-                    .ignoresSafeArea()
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        Color.white, Color.blue.opacity(0.2),
+                    ]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
             )
         }
     }
