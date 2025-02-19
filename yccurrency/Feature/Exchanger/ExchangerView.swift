@@ -9,43 +9,29 @@ import SwiftUI
 
 struct ExchangerView: View {
 
-    @State var searchText: String = ""
-    var paymentType: [ImageResource] = [
-        .krungthaiBankIcon,
-        .bangkokBankIcon,
-        .kplusIcon,
-        .scbPay,
-        .cbPay,
-        .ayaPayIcon,
-        .kpayIcon,
-        .waveIcon,
-
-    ]
+    @StateObject private var viewModel: ExchangerViewModel = .init()
 
     var body: some View {
         VStack(alignment: .leading) {
             Text("Money Exchangers")
                 .font(.largeTitle)
                 .padding(.horizontal)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             ScrollView {
                 VStack {
-                    ForEach([1, 2, 3, 4, 5], id: \.self) { item in
-                        ExchnagerProfileView(paymentType: paymentType)
+                    ForEach(viewModel.exchangerList, id: \.id) { item in
+                        ExchnagerProfileView(exchanger: item)
                     }
-
                 }
             }.scrollIndicators(.hidden)
-
-            //            .searchable(text: $searchText)
-
         }
         .background(Color.gray.opacity(0.1))
 
     }
 
     struct ExchnagerProfileView: View {
-        var paymentType: [ImageResource]
+        var exchanger: MoneyExchangerModel
 
         var body: some View {
             VStack(alignment: .leading) {
@@ -58,10 +44,10 @@ struct ExchangerView: View {
                         .padding()
 
                     VStack(alignment: .leading) {
-                        Text("Naing Ultra")
+                        Text("\(exchanger.name)")
                             .font(.system(size: 18, weight: .bold))
                             .padding(.bottom, 2)
-                        Text("Money Exchanger")
+                        Text("\(exchanger.role)")
                             .font(.system(size: 18, weight: .regular))
                     }
 
@@ -74,13 +60,14 @@ struct ExchangerView: View {
                 Text("Contact")
                     .font(.system(size: 18, weight: .bold))
                     .padding(.bottom, 2)
+
                 VStack(alignment: .leading) {
-                    Text("(+66 81 234 5678) TH")
-                        .font(.system(size: 16, weight: .thin))
-                        .padding(.bottom, 2)
-                    Text("(+95 81 234 5678) MM")
-                        .font(.system(size: 16, weight: .thin))
-                        .padding(.bottom, 2)
+                    ForEach(exchanger.contacts, id: \.number) { item in
+                        Text("(\(item.number) \(item.countryCode))")
+                            .font(.system(size: 16, weight: .thin))
+                            .padding(.bottom, 2)
+                    }
+
                 }
                 .padding(.horizontal)
                 .padding()
@@ -100,36 +87,45 @@ struct ExchangerView: View {
                     .font(.system(size: 18, weight: .bold))
                     .padding(.bottom, 2)
 
-                HStack(alignment: .top) {
-                    Text("100,000 MMK")
-                        .font(.system(size: 16, weight: .thin))
-                        .frame(width: 120)
+                VStack {
+                    ForEach(exchanger.rates, id: \.amount) { item in
+                        HStack(alignment: .top) {
+                            Text(
+                                "\(item.fromCurrency == "MMK" ? "100,000" : "\(item.amount)") \(item.fromCurrency)"
+                            )
+                            .font(.system(size: 16, weight: .thin))
+                            .frame(width: 120)
 
-                    Image(systemName: "arrow.right")
-                        .padding(.horizontal, 24)
+                            Image(systemName: "arrow.right")
+                                .padding(.horizontal, 24)
 
-                    Text("757 THB")
-                        .font(.system(size: 16, weight: .thin))
-                        .lineLimit(3)
-                        .padding(.bottom)
+                            Text(
+                                "\(item.fromCurrency == "MMK" ? "100,000" : "\(item.amount)") \(item.toCurrency)"
+                            )
+                            .font(.system(size: 16, weight: .thin))
+                            .lineLimit(3)
+                            .padding(.bottom)
+                        }
+                    }
                 }
-                HStack(alignment: .top) {
-                    Text("768 THB")
-                        .font(.system(size: 16, weight: .thin))
-                        .frame(width: 120)
 
-                    Image(systemName: "arrow.right")
-                        .padding(.horizontal, 24)
-
-                    Text("100,000 MMK")
-                        .font(.system(size: 16, weight: .thin))
-                        .lineLimit(3)
-                        .padding(.bottom)
-                }
+                //                HStack(alignment: .top) {
+                //                    Text("768 THB")
+                //                        .font(.system(size: 16, weight: .thin))
+                //                        .frame(width: 120)
+                //
+                //                    Image(systemName: "arrow.right")
+                //                        .padding(.horizontal, 24)
+                //
+                //                    Text("100,000 MMK")
+                //                        .font(.system(size: 16, weight: .thin))
+                //                        .lineLimit(3)
+                //                        .padding(.bottom)
+                //                }
 
                 HStack {
                     ForEach(
-                        paymentType, id: \.hashValue,
+                        exchanger.paymentType, id: \.hashValue,
                         content: { icon in
                             Image(icon)
                                 .resizable()

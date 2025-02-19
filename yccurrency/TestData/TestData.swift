@@ -4,6 +4,33 @@
 //
 //  Created by mac on 9/2/25.
 //
+let sampleMoneyExchangerJson = """
+    [
+      {
+        "id": 1,
+        "name": "Naing Ultra",
+        "role": "Money Exchanger",
+        "profileImage": "profile_pic",
+        "contacts": [
+          { "number": "66 81 234 5678", "countryCode": "TH" },
+          { "number": "95 81 234 5678", "countryCode": "MM" }
+        ],
+        "rates": [
+          { "fromCurrency": "MMK", "toCurrency": "THB", "amount": 757 },
+          { "fromCurrency": "THB", "toCurrency": "MMK", "amount": 768 }
+        ],
+        "paymentMethods": [
+          "krungthai",
+          "bangkok_bank",
+          "scb",
+          "k_plus",
+          "true_money",
+          "kbz_pay",
+          "wave_money"
+        ]
+      }
+    ]
+    """.data(using: .utf8)!
 
 let sampleCurrencyHistoryJson = """
     {
